@@ -4,7 +4,7 @@ import org.jsoup.nodes.Document;
 import java.io.*;
 import java.net.Socket;
 import java.util.Date;
-
+import java.util.Scanner;
 
 
 public class ConnectionHandler extends Thread {
@@ -131,10 +131,17 @@ public class ConnectionHandler extends Thread {
         output.println();
         output.flush();
 
-        if(contentType != "image/jpeg"){
-            output.println(getData(file));
-        } else {
-            try {
+        try {
+            if (contentType != "image/jpeg") {
+                //output.println(getData(file));
+
+                Scanner scanner = new Scanner(new File(file.getPath()));
+                String text = scanner.useDelimiter("\\A").next();
+                output.print(text);
+                scanner.close();
+
+            } else {
+
                 byte[] buffer = new byte[getFileLength(file)];
                 BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
 
@@ -144,9 +151,9 @@ public class ConnectionHandler extends Thread {
                 }
                 output.println(getData(file));
 
-            } catch (IOException e) {
-                System.out.println("SEND GET IMAGE EXCEPTION: " + e.getMessage());
             }
+        } catch (IOException e) {
+            System.out.println("SEND GET IMAGE EXCEPTION: " + e.getMessage());
         }
 
         output.flush();
