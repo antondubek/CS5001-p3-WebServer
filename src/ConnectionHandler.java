@@ -4,12 +4,14 @@ import org.jsoup.nodes.Element;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Date;
 
 public class ConnectionHandler extends Thread {
 
     private Socket socket;
     private String directory;
     private int helper;
+    private File requestedFile;
 
     public ConnectionHandler(Socket socket, String directory){
         System.out.println(ThreadColor.ANSI_BLUE+"Connection Established, creating handler");
@@ -29,8 +31,8 @@ public class ConnectionHandler extends Thread {
                 String request = input.readLine();
 
                 // Only get the first parameters passed
-                //if(helper == 0) {
-                    //helper++;
+                if(helper == 0) {
+                    helper++;
 
                     //Parse request
                     String[] parsedRequest = request.split(" ");
@@ -39,23 +41,33 @@ public class ConnectionHandler extends Thread {
                     String requestType = parsedRequest[0];
                     System.out.println(ThreadColor.ANSI_GREEN+"String 1 = " + parsedRequest[1]);
                     String requestDirectory = directory + parsedRequest[1];
-                    if(requestType.equals("HEAD")){
-                        // get the header
-                        getHeader(requestDirectory);
-                        // return the header
 
+                    if(new File(requestDirectory).isFile()) {
+                        requestedFile = new File(requestDirectory);
+                    } else {
+                        // 404 message returned
+                        output.println("HTTP/1.1 404 FILE NOT FOUND");
+                        break;
                     }
+
                     if(requestType.equals("GET")){ // check if it is GET
                         // return the header + file
-                        String response = getWhole(requestDirectory);
-                        System.out.println(ThreadColor.ANSI_PURPLE+response);
-                        output.println(response);
-                        break;//if so then break
+                        int fileLength = getFileLength(requestedFile);
+                        //byte[] content = getData(requestedFile);
+                        String content = getData(requestedFile);
+
+
+                        output.println("HTTP/1.1 200 OK");
+                        output.println("Server: Java HTTP Server by ACM35 : 1.0");
+                        output.println("Date: "+ new Date());
+                        output.println("Content-type: text/html");
+                        output.println("Content-length: " + fileLength);
+                        output.println();
+                        output.flush();
+                        output.println(content);
+                        output.flush();
                     }
-                    //output.println("Echo: " + request); //Echo back using printWriter
-
-                //}
-
+                }
             }
         } catch(IOException e){
             System.out.println("Ooops" + e.getMessage());
@@ -82,12 +94,33 @@ public class ConnectionHandler extends Thread {
         System.out.println(requestedDirectory);
     }
 
-    private String getWhole(String requestedDirectory){
-        File requestedFile = new File(requestedDirectory);
+    private int getFileLength(File requestedFile){
         long fileLength = requestedFile.length();
+        return (int)fileLength;
+    }
 
-        System.out.println(requestedDirectory);
-        return "404";
+//    private byte[] getData(File requestedFile) throws IOException{
+//        FileInputStream fileIn = null;
+////        byte[] fileData = new byte[getFileLength(requestedFile)];
+////
+////        try{
+////            fileIn = new FileInputStream(requestedFile);
+////        } finally {
+////            if(fileIn != null)
+////                fileIn.close();
+////        }
+////
+////        return fileData;
+//    }
+
+    private String getData(File requestedFile){
+        try {
+            Document doc = Jsoup.parse(requestedFile, "UTF-8");
+            return doc.html();
+        } catch (IOException e){
+            System.out.println("Get Data Exception: " + e.getMessage());
+        }
+        return "";
     }
 
 }
