@@ -1,6 +1,3 @@
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Date;
@@ -89,17 +86,6 @@ public class ConnectionHandler extends Thread {
         return (int) fileLength;
     }
 
-
-    private String getData(File requestedFile) {
-        try {
-            Document doc = Jsoup.parse(requestedFile, "UTF-8");
-            return doc.html();
-        } catch (IOException e) {
-            System.out.println("Get Data Exception: " + e.getMessage());
-        }
-        return "";
-    }
-
     private String checkContentType(File file) {
         String fileName = file.getName();
         if (fileName.endsWith(".htm") || fileName.endsWith("html")) {
@@ -109,6 +95,31 @@ public class ConnectionHandler extends Thread {
         } else {
             return "text/plain";
         }
+    }
+
+    private void sendData(File file, String contentType){
+
+        try {
+            if (contentType != "image/jpeg") {
+                Scanner scanner = new Scanner(new File(file.getPath()));
+                String text = scanner.useDelimiter("\\A").next();
+                output.print(text);
+                scanner.close();
+
+            } else {
+
+                byte[] buffer = new byte[getFileLength(file)];
+                BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    buffOut.write(buffer, 0, bytesRead);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("SEND GET IMAGE EXCEPTION: " + e.getMessage());
+        }
+
     }
 
     private void sendHEAD(File file, String contentType) {
@@ -131,30 +142,7 @@ public class ConnectionHandler extends Thread {
         output.println();
         output.flush();
 
-        try {
-            if (contentType != "image/jpeg") {
-                //output.println(getData(file));
-
-                Scanner scanner = new Scanner(new File(file.getPath()));
-                String text = scanner.useDelimiter("\\A").next();
-                output.print(text);
-                scanner.close();
-
-            } else {
-
-                byte[] buffer = new byte[getFileLength(file)];
-                BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-
-                int bytesRead;
-                while ((bytesRead = in.read(buffer)) != -1) {
-                    buffOut.write(buffer, 0, bytesRead);
-                }
-                output.println(getData(file));
-
-            }
-        } catch (IOException e) {
-            System.out.println("SEND GET IMAGE EXCEPTION: " + e.getMessage());
-        }
+        sendData(file, contentType);
 
         output.flush();
     }
