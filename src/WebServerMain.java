@@ -4,7 +4,6 @@ public class WebServerMain {
 
         // Check the arguments
         if(args.length != 2){
-            System.out.println("java WebServerMain");
             System.out.println("Usage: java WebServerMain <document_root> <port>");
         }
 
