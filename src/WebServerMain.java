@@ -3,7 +3,7 @@ public class WebServerMain {
     public static void main(String[] args) {
 
         // Check the arguments
-        if(args.length != 2){
+        if (args.length != 2) {
             System.out.println("Usage: java WebServerMain <document_root> <port>");
         }
 

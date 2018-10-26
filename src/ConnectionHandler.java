@@ -64,11 +64,11 @@ public class ConnectionHandler extends Thread {
         }
     }
 
-    private void handleRequest(File requestedFile, String request){
+    private void handleRequest(File requestedFile, String request) {
         // Check what kind of file it is
         String contentType = checkContentType(requestedFile);
 
-        switch(request){
+        switch (request) {
             case "HEAD":
                 sendHEAD(requestedFile, contentType);
                 break;
@@ -97,7 +97,7 @@ public class ConnectionHandler extends Thread {
         }
     }
 
-    private void sendData(File file, String contentType){
+    private void sendData(File file, String contentType) {
 
         try {
             if (contentType != "image/jpeg") {
