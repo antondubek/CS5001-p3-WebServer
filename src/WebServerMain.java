@@ -7,7 +7,9 @@ public class WebServerMain {
             String directory = args[0];
             int port = Integer.parseInt(args[1]);
 
-            new Server(directory, port);
+            Server server = new Server(directory, port, 1);
+            new Thread(server).start();
+
         } else {
             System.out.println("Usage: java WebServerMain <document_root> <port>");
         }

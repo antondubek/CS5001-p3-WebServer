@@ -5,7 +5,7 @@ import java.util.Scanner;
 import java.util.StringTokenizer;
 
 
-public class ConnectionHandler extends Thread {
+public class ConnectionHandler implements Runnable {
 
     private Socket socket;
     private String directory;
