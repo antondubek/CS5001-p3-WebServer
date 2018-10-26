@@ -1,14 +1,8 @@
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.StringTokenizer;
 
 
 public class ConnectionHandler extends Thread {
@@ -42,32 +36,27 @@ public class ConnectionHandler extends Thread {
 
             while (true) {
 
-                if (helper == 0) {
-                    helper++;
-                    // Receive the input being sent
-                    String request = input.readLine();
+                // Receive the input being sent
+                String request = input.readLine();
 
-                    //Parse request
-                    String[] parsedRequest = request.split(" ");
+                StringTokenizer tokenizer = new StringTokenizer(request);
+                String requestType = tokenizer.nextToken();
+                String requestDirectory = directory + tokenizer.nextToken();
 
-                    System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + parsedRequest[0]);
-                    String requestType = parsedRequest[0];
-                    System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + parsedRequest[1]);
-                    String requestDirectory = directory + parsedRequest[1];
+                System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + requestType);
+                System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + requestDirectory);
 
-                    if (new File(requestDirectory).isFile()) {
-                        requestedFile = new File(requestDirectory);
-                        handleRequest(requestedFile, requestType);
-                    } else {
-                        requestedFile = null;
-                        requestType = "404";
-                        handleRequest(requestedFile, requestType);
-                        break;
-                    }
 
+                if (new File(requestDirectory).isFile()) {
+                    requestedFile = new File(requestDirectory);
+                    handleRequest(requestedFile, requestType);
+                } else {
+                    requestedFile = null;
+                    requestType = "404";
+                    handleRequest(requestedFile, requestType);
                 }
-                break;
 
+                break;
             }
         } catch (IOException e) {
             System.out.println("ClientHandler run Catch: " + e.getMessage());
