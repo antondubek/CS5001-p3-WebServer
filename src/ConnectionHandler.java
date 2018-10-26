@@ -55,6 +55,8 @@ public class ConnectionHandler extends Thread {
 
                 }
 
+                break;
+
             }
         } catch (IOException e) {
             System.out.println("Ooops" + e.getMessage());
