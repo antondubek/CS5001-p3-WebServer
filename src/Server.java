@@ -23,6 +23,7 @@ public class Server implements Runnable{
 
             while (true) {
                 System.out.println(ThreadColor.ANSI_BLUE + "Server Listening on Port " + port);
+                WebServerMain.printToLog("Server Listening on Port " + port);
                 threadPool.execute(new ConnectionHandler(serverSocket.accept(), directory));
             }
 

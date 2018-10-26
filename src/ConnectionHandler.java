@@ -24,6 +24,7 @@ public class ConnectionHandler implements Runnable {
 
     public ConnectionHandler(Socket socket, String directory) {
         System.out.println(ThreadColor.ANSI_BLUE + "Connection Established, creating handler");
+        WebServerMain.printToLog("Connection Established, creating handler");
         this.socket = socket;
         this.directory = directory;
         this.helper = 0;
@@ -32,6 +33,7 @@ public class ConnectionHandler implements Runnable {
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = new PrintWriter(socket.getOutputStream(), true);
             buffOut = new BufferedOutputStream(socket.getOutputStream());
+
         } catch (IOException e) {
             System.out.println("Connection Handler Constructor: " + e.getMessage());
         }
@@ -52,6 +54,7 @@ public class ConnectionHandler implements Runnable {
 
                 System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + requestType);
                 System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + requestDirectory);
+                WebServerMain.printToLog("Received " + requestType + " request on file " + requestDirectory);
 
 
                 if (new File(requestDirectory).isFile()) {
@@ -96,9 +99,11 @@ public class ConnectionHandler implements Runnable {
                 break;
             case "404":
                 output.println("HTTP/1.1 404 Not Found");
+                WebServerMain.printToLog("Response from server - 404 Not Found");
                 break;
             default:
                 output.println("HTTP/1.1 501 Not Implemented");
+                WebServerMain.printToLog("Response from server - 501 Not Implemented");
                 break;
         }
     }
@@ -156,12 +161,14 @@ public class ConnectionHandler implements Runnable {
 
     private void sendHEAD(File file, String contentType) {
         output.println("HTTP/1.1 200 OK");
-        output.println("Server: Java HTTP Server by ACM35 : 1.0");
+        WebServerMain.printToLog("Response from server - 200 OK");
+        output.println("Server: Java HTTP Server by ACM35");
         output.println("Date: " + new Date());
         output.println("Content-Type: " + contentType);
         output.println("Content-Length: " + getFileLength(file));
         output.println();
         output.flush();
+        WebServerMain.printToLog("Header sent from server");
     }
 
     private void sendGET(File file, String contentType) {
@@ -169,6 +176,11 @@ public class ConnectionHandler implements Runnable {
         sendHEAD(file, contentType);
         // return the content
         sendData(file, contentType);
+        WebServerMain.printToLog(contentType + " of length " +getFileLength(file)+ " sent from server");
+    }
+
+    private void writeToFile(String message){
+
     }
 
 }
