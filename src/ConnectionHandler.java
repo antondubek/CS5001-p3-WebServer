@@ -1,4 +1,11 @@
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Scanner;
@@ -19,18 +26,23 @@ public class ConnectionHandler extends Thread {
         this.socket = socket;
         this.directory = directory;
         this.helper = 0;
+
+        try {
+            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            output = new PrintWriter(socket.getOutputStream(), true);
+            buffOut = new BufferedOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            System.out.println("Connection Handler Constructor: " + e.getMessage());
+        }
     }
 
     @Override
     public void run() {
         try {
-            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            output = new PrintWriter(socket.getOutputStream(), true);
-            buffOut = new BufferedOutputStream(socket.getOutputStream());
 
             while (true) {
 
-                if(helper == 0) {
+                if (helper == 0) {
                     helper++;
                     // Receive the input being sent
                     String request = input.readLine();
@@ -54,17 +66,19 @@ public class ConnectionHandler extends Thread {
                     }
 
                 }
-
                 break;
 
             }
         } catch (IOException e) {
-            System.out.println("Ooops" + e.getMessage());
+            System.out.println("ClientHandler run Catch: " + e.getMessage());
         } finally {
             try {
+                input.close();
+                output.close();
+                buffOut.close();
                 socket.close();
             } catch (IOException e) {
-                //oh well
+                System.out.println("ClientHandler run Finally: " + e.getMessage());
             }
         }
     }
@@ -72,7 +86,7 @@ public class ConnectionHandler extends Thread {
     private void handleRequest(File requestedFile, String request) {
         String contentType = "";
 
-        if(requestedFile!= null) {
+        if (requestedFile != null) {
             // Check what kind of file it is
             contentType = checkContentType(requestedFile);
         }
@@ -127,9 +141,14 @@ public class ConnectionHandler extends Thread {
                 while ((bytesRead = in.read(buffer)) != -1) {
                     buffOut.write(buffer, 0, bytesRead);
                 }
+
+                in.close();
             }
+
+            output.flush();
+
         } catch (IOException e) {
-            System.out.println("SEND GET IMAGE EXCEPTION: " + e.getMessage());
+            System.out.println("ClientHandler sendData: " + e.getMessage());
         }
 
     }
@@ -145,18 +164,10 @@ public class ConnectionHandler extends Thread {
     }
 
     private void sendGET(File file, String contentType) {
-        // return the header + file
-        output.println("HTTP/1.1 200 OK");
-        output.println("Server: Java HTTP Server by ACM35 : 1.0");
-        output.println("Date: " + new Date());
-        output.println("Content-Type: " + contentType);
-        output.println("Content-Length: " + getFileLength(file));
-        output.println();
-        output.flush();
-
+        // return the header
+        sendHEAD(file, contentType);
+        // return the content
         sendData(file, contentType);
-
-        output.flush();
     }
 
 }
