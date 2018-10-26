@@ -30,27 +30,30 @@ public class ConnectionHandler extends Thread {
 
             while (true) {
 
+                if(helper == 0) {
+                    helper++;
+                    // Receive the input being sent
+                    String request = input.readLine();
 
-                // Receive the input being sent
-                String request = input.readLine();
+                    //Parse request
+                    String[] parsedRequest = request.split(" ");
 
-                //Parse request
-                String[] parsedRequest = request.split(" ");
+                    System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + parsedRequest[0]);
+                    String requestType = parsedRequest[0];
+                    System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + parsedRequest[1]);
+                    String requestDirectory = directory + parsedRequest[1];
 
-                System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + parsedRequest[0]);
-                String requestType = parsedRequest[0];
-                System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + parsedRequest[1]);
-                String requestDirectory = directory + parsedRequest[1];
+                    if (new File(requestDirectory).isFile()) {
+                        requestedFile = new File(requestDirectory);
+                        handleRequest(requestedFile, requestType);
+                    } else {
+                        requestedFile = null;
+                        requestType = "404";
+                        handleRequest(requestedFile, requestType);
+                        break;
+                    }
 
-                if (new File(requestDirectory).isFile()) {
-                    requestedFile = new File(requestDirectory);
-                    handleRequest(requestedFile, requestType);
-                } else {
-                    // 404 message returned
-                    output.println("HTTP/1.1 404 Not Found");
-                    break;
                 }
-
 
             }
         } catch (IOException e) {
@@ -65,8 +68,12 @@ public class ConnectionHandler extends Thread {
     }
 
     private void handleRequest(File requestedFile, String request) {
-        // Check what kind of file it is
-        String contentType = checkContentType(requestedFile);
+        String contentType = "";
+
+        if(requestedFile!= null) {
+            // Check what kind of file it is
+            contentType = checkContentType(requestedFile);
+        }
 
         switch (request) {
             case "HEAD":
@@ -74,6 +81,9 @@ public class ConnectionHandler extends Thread {
                 break;
             case "GET":
                 sendGET(requestedFile, contentType);
+                break;
+            case "404":
+                output.println("HTTP/1.1 404 Not Found");
                 break;
             default:
                 output.println("HTTP/1.1 501 Not Implemented");
