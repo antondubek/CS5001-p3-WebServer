@@ -97,6 +97,8 @@ public class ConnectionHandler implements Runnable {
             case "GET":
                 sendGET(requestedFile, contentType);
                 break;
+            case "OPTIONS":
+                sendHEAD(requestedFile, contentType, true);
             case "404":
                 output.println("HTTP/1.1 404 Not Found");
                 WebServerMain.printToLog("Response from server - 404 Not Found");
@@ -170,6 +172,22 @@ public class ConnectionHandler implements Runnable {
         output.flush();
         WebServerMain.printToLog("Header sent from server");
     }
+
+    private void sendHEAD(File file, String contentType, Boolean allow) {
+        output.println("HTTP/1.1 200 OK");
+        WebServerMain.printToLog("Response from server - 200 OK");
+        output.println("Server: Java HTTP Server by ACM35");
+        output.println("Date: " + new Date());
+        if(allow){
+            output.println("Allow: OPTIONS, GET, HEAD");
+        }
+        output.println("Content-Type: " + contentType);
+        output.println("Content-Length: " + getFileLength(file));
+        output.println();
+        output.flush();
+        WebServerMain.printToLog("Options header sent from server");
+    }
+
 
     private void sendGET(File file, String contentType) {
         // return the header
