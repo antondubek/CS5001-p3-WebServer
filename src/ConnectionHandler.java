@@ -137,8 +137,8 @@ public class ConnectionHandler extends Thread {
         output.println("HTTP/1.1 200 OK");
         output.println("Server: Java HTTP Server by ACM35 : 1.0");
         output.println("Date: " + new Date());
-        output.println("Content-type: " + contentType);
-        output.println("Content-length: " + getFileLength(file));
+        output.println("Content-Type: " + contentType);
+        output.println("Content-Length: " + getFileLength(file));
         output.println();
         output.flush();
 
