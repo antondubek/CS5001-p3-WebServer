@@ -56,15 +56,7 @@ public class ConnectionHandler implements Runnable {
                 System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + requestDirectory);
                 WebServerMain.printToLog("Received " + requestType + " request on file " + requestDirectory);
 
-
-                if (new File(requestDirectory).isFile()) {
-                    requestedFile = new File(requestDirectory);
-                    handleRequest(requestedFile, requestType);
-                } else {
-                    requestedFile = null;
-                    requestType = "404";
-                    handleRequest(requestedFile, requestType);
-                }
+                handleRequest(requestDirectory, requestType);
 
                 break;
             }
@@ -82,23 +74,38 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
-    private void handleRequest(File requestedFile, String request) {
+    private void handleRequest(String requestedFile, String request) {
         String contentType = "";
 
-        if (requestedFile != null) {
+        File foundFile = getFile(requestedFile);
+
+        // Check to see if the options is wanted for server or file
+        if((request.equals("OPTIONS")) && (requestedFile.endsWith("*"))){
+            request = "SERVEROPTIONS";
+        }
+
+        // Try and get the file, if its null, check if its a general options request
+        // If it isint then send 404 error.
+        if (foundFile != null) {
             // Check what kind of file it is
-            contentType = checkContentType(requestedFile);
+            contentType = checkContentType(foundFile);
+        } else if (!request.equals("SERVEROPTIONS")){
+            request = "404";
         }
 
         switch (request) {
             case "HEAD":
-                sendHEAD(requestedFile, contentType);
+                sendHEAD(foundFile, contentType, 0);
                 break;
             case "GET":
-                sendGET(requestedFile, contentType);
+                sendGET(foundFile, contentType);
                 break;
             case "OPTIONS":
-                sendHEAD(requestedFile, contentType, true);
+                sendHEAD(foundFile, contentType, 1);
+                break;
+            case "SERVEROPTIONS":
+                sendHEAD(foundFile, contentType, 2);
+                break;
             case "404":
                 output.println("HTTP/1.1 404 Not Found");
                 WebServerMain.printToLog("Response from server - 404 Not Found");
@@ -107,6 +114,14 @@ public class ConnectionHandler implements Runnable {
                 output.println("HTTP/1.1 501 Not Implemented");
                 WebServerMain.printToLog("Response from server - 501 Not Implemented");
                 break;
+        }
+    }
+
+    private File getFile(String requestDirectory){
+        if (new File(requestDirectory).isFile()) {
+            return new File(requestDirectory);
+        } else {
+            return null;
         }
     }
 
@@ -161,44 +176,32 @@ public class ConnectionHandler implements Runnable {
 
     }
 
-    private void sendHEAD(File file, String contentType) {
+    private void sendHEAD(File file, String contentType, int config) {
         output.println("HTTP/1.1 200 OK");
         WebServerMain.printToLog("Response from server - 200 OK");
         output.println("Server: Java HTTP Server by ACM35");
         output.println("Date: " + new Date());
+        if(config == 1) {
+            output.println("Allow: OPTIONS, GET, HEAD");
+        }
         output.println("Content-Type: " + contentType);
-        output.println("Content-Length: " + getFileLength(file));
+        if(config == 2) {
+            output.println("Content-Length: 0");
+        } else {
+            output.println("Content-Length: " + getFileLength(file));
+        }
         output.println();
         output.flush();
         WebServerMain.printToLog("Header sent from server");
     }
 
-    private void sendHEAD(File file, String contentType, Boolean allow) {
-        output.println("HTTP/1.1 200 OK");
-        WebServerMain.printToLog("Response from server - 200 OK");
-        output.println("Server: Java HTTP Server by ACM35");
-        output.println("Date: " + new Date());
-        if(allow){
-            output.println("Allow: OPTIONS, GET, HEAD");
-        }
-        output.println("Content-Type: " + contentType);
-        output.println("Content-Length: " + getFileLength(file));
-        output.println();
-        output.flush();
-        WebServerMain.printToLog("Options header sent from server");
-    }
-
 
     private void sendGET(File file, String contentType) {
         // return the header
-        sendHEAD(file, contentType);
+        sendHEAD(file, contentType, 0);
         // return the content
         sendData(file, contentType);
         WebServerMain.printToLog(contentType + " of length " +getFileLength(file)+ " sent from server");
-    }
-
-    private void writeToFile(String message){
-
     }
 
 }
