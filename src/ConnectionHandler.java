@@ -1,4 +1,11 @@
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Scanner;
@@ -103,10 +110,15 @@ public class ConnectionHandler implements Runnable {
 
     private String checkContentType(File file) {
         String fileName = file.getName();
-        if (fileName.endsWith(".htm") || fileName.endsWith("html")) {
+
+        if (fileName.endsWith(".htm") || fileName.endsWith(".html")) {
             return "text/html";
         } else if (fileName.endsWith(".jpg")) {
             return "image/jpeg";
+        } else if (fileName.endsWith(".png")){
+            return "image/png";
+        } else if (fileName.endsWith(".gif")){
+            return "image/gif";
         } else {
             return "text/plain";
         }
@@ -115,7 +127,7 @@ public class ConnectionHandler implements Runnable {
     private void sendData(File file, String contentType) {
 
         try {
-            if (contentType != "image/jpeg") {
+            if (contentType.equals("text/html") || contentType.equals("text/plain")) {
                 Scanner scanner = new Scanner(new File(file.getPath()));
                 String text = scanner.useDelimiter("\\A").next();
                 output.print(text);
