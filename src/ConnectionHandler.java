@@ -1,11 +1,20 @@
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
 /**
- * ConnectionHandler class handles each seperate connection, processing any requests passed to it
+ * ConnectionHandler class handles each seperate connection, processing any requests passed to it.
  */
 public class ConnectionHandler implements Runnable {
 
@@ -143,7 +152,7 @@ public class ConnectionHandler implements Runnable {
     }
 
     /**
-     * Given a directory as a string, converts it to a file object if the file exists
+     * Given a directory as a string, converts it to a file object if the file exists.
      *
      * @param requestDirectory string of file path
      * @return null if file does not exist or File object
@@ -157,7 +166,7 @@ public class ConnectionHandler implements Runnable {
     }
 
     /**
-     * Gets the length of a file
+     * Gets the length of a file.
      *
      * @param requestedFile File object of the file
      * @return int Length of the file
@@ -168,7 +177,7 @@ public class ConnectionHandler implements Runnable {
     }
 
     /**
-     * Given a file, retrieves the extension of the file and returns the HTTP content type
+     * Given a file, retrieves the extension of the file and returns the HTTP content type.
      *
      * @param file File object of file to check
      * @return String of content type
@@ -190,7 +199,7 @@ public class ConnectionHandler implements Runnable {
     }
 
     /**
-     * Given a content type from a client request, returns the extension of the file
+     * Given a content type from a client request, returns the extension of the file.
      *
      * @param contentType String content-type header from request
      * @return UNKNOWN if not implemented otherwise file extension
@@ -246,7 +255,7 @@ public class ConnectionHandler implements Runnable {
 
     /**
      * Sends the HEAD request to the client. Configuration options have been included for
-     * processing OPTIONS requests
+     * processing OPTIONS requests.
      *
      * @param file        File object to return the HEAD data for
      * @param contentType Content type of file
@@ -276,7 +285,7 @@ public class ConnectionHandler implements Runnable {
     }
 
     /**
-     * Processes the GET HTTP request sending the head, data and then logging
+     * Processes the GET HTTP request sending the head, data and then logging.
      *
      * @param file        File to be sent to the client
      * @param contentType Content type of the file
@@ -304,14 +313,15 @@ public class ConnectionHandler implements Runnable {
             String line = null;
             System.out.println(ThreadColor.ANSI_PURPLE + "--------- HEAD -------");
             // Iterate through until there is a blank line signifying start of data
-            while (!(line = input.readLine()).equals("")) {
+            do {
+                line = input.readLine();
                 headRequest.append(line + "\n");
                 //If the line is the content-type, check what kind of file it is
                 if (line.toLowerCase().startsWith("content-type")) {
                     fileType = getFileTypeFromContentType(line);
                 }
                 System.out.println(ThreadColor.ANSI_PURPLE + line);
-            }
+            } while (!(line).equals(""));
         } catch (IOException e) {
             System.out.println("putRequest: Read from input error:" + e.getMessage());
         }
@@ -340,11 +350,12 @@ public class ConnectionHandler implements Runnable {
             System.out.println(ThreadColor.ANSI_CYAN + "--------- DATA -------");
             StringBuffer s = new StringBuffer("");
             String line = "";
-            while (!(line = input.readLine()).equals("")) {
+            do {
+                line = input.readLine();
                 s.append(line + "\n");
                 pw.println(line);
                 System.out.println(line);
-            }
+            } while (!(line).equals(""));
 
             // If the file existed, return 204 message else 201 to acknowledge creation
             if (!existsAlready) {

@@ -5,8 +5,8 @@ import java.util.concurrent.Executors;
 
 /**
  * Server class which initiates a server listening on a desired port.
- * It then creates and manages a threadpool which handles each connection to the server
- * This allows for multiple simultaneous connections
+ * It then creates and manages a threadpool which handles each connection to the server.
+ * This allows for multiple simultaneous connections.
  */
 public class Server implements Runnable {
 
@@ -16,7 +16,7 @@ public class Server implements Runnable {
     private ExecutorService threadPool;
 
     /**
-     * Server constructor
+     * Server constructor.
      *
      * @param directory directory of the server
      * @param port      port to listen on for incoming connections
@@ -31,7 +31,7 @@ public class Server implements Runnable {
 
     /**
      * Since the server class implements runnable, a overriden run method must be created which is
-     * executed from WebServerMain
+     * executed from WebServerMain.
      */
     @Override
     public void run() {

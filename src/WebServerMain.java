@@ -6,13 +6,36 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * Main WebServer class, running this with the arguments listed below will create the server and logs
+ * Main WebServer class, running this with the arguments listed below will create the server and logs.
  * Argument 1 : String : directory of the files you wish to access or insert to (Must exist)
  * Argument 2 : int : Port number which the server will listen on (1024 - 49151)
  */
 public class WebServerMain {
-    public static String logFilePath = "logFile.txt";
 
+    /**
+     * Log file name.
+     */
+    private static final String LOG_FILE_PATH = "logFile.txt";
+
+    /**
+     * Size of multithread pool, max number of simultaneous connections available.
+     */
+    private static final int POOL_SIZE = 10;
+
+    /**
+     * Minimum port number allowed to be used by server to listen for connections.
+     */
+    private static final int MIN_PORT = 1024;
+
+    /**
+     * Maximum port number allowed to be used by server to listen for connections.
+     */
+    private static final int MAX_PORT = 49151;
+
+    /**
+     * Main web server code to run.
+     * @param args Arg1: String directory name Arg2: Port number to listen on
+     */
     public static void main(String[] args) {
 
         // Check the arguments
@@ -21,11 +44,11 @@ public class WebServerMain {
             String directory = args[0];
             int port = Integer.parseInt(args[1]);
 
-            createLogFile(logFilePath);
+            createLogFile(LOG_FILE_PATH);
 
             // Check the arguments passed are valid
             if (checkDirectory(directory) && checkPort(port)) {
-                Server server = new Server(directory, port, 10);
+                Server server = new Server(directory, port, POOL_SIZE);
                 new Thread(server).start();
             }
 
@@ -36,7 +59,7 @@ public class WebServerMain {
     }
 
     /**
-     * Checks whether the directory exists
+     * Checks whether the directory exists.
      *
      * @param directory String containing location of directory
      * @return Boolean True if exists, false if not
@@ -52,13 +75,14 @@ public class WebServerMain {
     }
 
     /**
-     * Checks the port number passed is valid (ie within the registered port range 1024 - 49151)
+     * Checks the port number passed is valid (ie within the registered port range 1024 - 49151).
      *
      * @param port int number to listen on
      * @return boolean true if in range, false if not
      */
     private static boolean checkPort(int port) {
-        if (port <= 49151 && port > 1024) {
+        if (port <= MAX_PORT && port > MIN_PORT) {
+            System.out.println("Port number " + port + " accepted!");
             return true;
         } else {
             System.out.println("ERROR STARTING SERVER: Please use a port number from 1024 - 49151");
@@ -67,7 +91,7 @@ public class WebServerMain {
     }
 
     /**
-     * Checks whether a log file exists, if it does, loads it, else creates one
+     * Checks whether a log file exists, if it does, loads it, else creates one.
      *
      * @param filePath name of the log file
      */
@@ -77,9 +101,9 @@ public class WebServerMain {
         try {
             if (logFile.createNewFile()) {
                 // file created
+                printToLog("**************************************************");
+                printToLog("Server Started");
             }
-            printToLog("**************************************************");
-            printToLog("Server Started");
 
         } catch (IOException e) {
             System.out.println("Log file creation exception: " + e.getMessage());
@@ -88,13 +112,13 @@ public class WebServerMain {
     }
 
     /**
-     * Simple method to log a message to the log file
+     * Simple method to log a message to the log file.
      *
      * @param message message to put into the log file.
      */
     public static void printToLog(String message) {
         try {
-            FileWriter logFileWriter = new FileWriter(logFilePath, true);
+            FileWriter logFileWriter = new FileWriter(LOG_FILE_PATH, true);
             DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
             Date date = new Date();
             logFileWriter.write(dateFormat.format(date) + " : " + message + "\n");
