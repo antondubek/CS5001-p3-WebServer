@@ -39,35 +39,35 @@ public class ConnectionHandler implements Runnable {
             while (true) {
 
                 // Receive the input being sent
-                //String request = input.readLine();
+                String request = input.readLine();
                 //System.out.println(input.readLine());
 
-                StringBuilder sb = new StringBuilder();
-
-                String line = null;
-                while (( line = input.readLine()) != null) {
-                    sb.append(line + "\n");
-                }
-
-                System.out.println("here");
-                input.close();
-                output.println("HTTP/1.1 201 Created");
-                output.println("Content-Location: ");
-
-                System.out.println(sb.toString());
-
-//                tokenizer = new StringTokenizer(request);
-//                String requestType = tokenizer.nextToken();
-//                String requestDirectory = directory + tokenizer.nextToken();
+//                StringBuilder sb = new StringBuilder();
 //
-//                System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + requestType);
-//                System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + requestDirectory);
-//                System.out.println(ThreadColor.ANSI_GREEN + "String 2 = " + tokenizer.nextToken());
-//                //System.out.println(ThreadColor.ANSI_GREEN + "String 3 = " + tokenizer.nextToken());
+//                String line = null;
+//                while (( line = input.readLine()) != null) {
+//                    sb.append(line + "\n");
+//                }
 //
-//                WebServerMain.printToLog("Received " + requestType + " request on file " + requestDirectory);
+//                System.out.println("here");
+//                input.close();
+//                output.println("HTTP/1.1 201 Created");
+//                output.println("Content-Location: ");
 //
-//                handleRequest(requestDirectory, requestType);
+//                System.out.println(sb.toString());
+
+                tokenizer = new StringTokenizer(request);
+                String requestType = tokenizer.nextToken();
+                String requestDirectory = directory + tokenizer.nextToken();
+
+                System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + requestType);
+                System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + requestDirectory);
+                System.out.println(ThreadColor.ANSI_GREEN + "String 2 = " + tokenizer.nextToken());
+                //System.out.println(ThreadColor.ANSI_GREEN + "String 3 = " + tokenizer.nextToken());
+
+                WebServerMain.printToLog("Received " + requestType + " request on file " + requestDirectory);
+
+                handleRequest(requestDirectory, requestType);
 
                 break;
             }
