@@ -38,7 +38,6 @@ public class ConnectionHandler implements Runnable {
         try {
 
             while (true) {
-
                 // Receive the input being sent
                 String request = input.readLine();
 
@@ -47,6 +46,7 @@ public class ConnectionHandler implements Runnable {
                 String requestType = tokenizer.nextToken();
                 String requestDirectory = directory + tokenizer.nextToken();
 
+                System.out.println(ThreadColor.ANSI_GREEN + "--------- REQUEST -------");
                 System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + requestType);
                 System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + requestDirectory);
                 System.out.println(ThreadColor.ANSI_GREEN + "String 2 = " + tokenizer.nextToken());
@@ -271,8 +271,8 @@ public class ConnectionHandler implements Runnable {
                 System.out.println(line);
             }
 
-            // If the file existed, return 201 message else 204 to acknowledge competition
-            if(existsAlready){
+            // If the file existed, return 204 message else 201 to acknowledge creation
+            if(!existsAlready){
                 output.println("HTTP/1.1 201 Created");
                 WebServerMain.printToLog("Response from server - 201 Created");
                 System.out.println(ThreadColor.ANSI_RED + "Response from server - 201 Created");
