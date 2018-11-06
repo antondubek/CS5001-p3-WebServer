@@ -1,3 +1,6 @@
+/**
+ * Simple class used to implement colors into the console log for ease of debugging
+ */
 public class ThreadColor {
 
     public static final String ANSI_RESET = "\u001B[0m";

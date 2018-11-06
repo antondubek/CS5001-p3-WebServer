@@ -4,7 +4,9 @@ import java.util.Date;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
-
+/**
+ * ConnectionHandler class handles each seperate connection, processing any requests passed to it
+ */
 public class ConnectionHandler implements Runnable {
 
     private Socket socket;
@@ -14,9 +16,16 @@ public class ConnectionHandler implements Runnable {
     private BufferedOutputStream buffOut;
     private StringTokenizer tokenizer;
     private StringBuilder headRequest;
-
     private String data;
 
+
+    /**
+     * ConnectionHandler constructor, creates the buffered in and out readers for receiving and
+     * passing data to the client.
+     *
+     * @param socket    Socket object which the client has connected to
+     * @param directory directory of the server
+     */
     public ConnectionHandler(Socket socket, String directory) {
         System.out.println(ThreadColor.ANSI_BLUE + "Connection Established, creating handler");
         WebServerMain.printToLog("Connection Established, creating handler");
@@ -33,6 +42,11 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+    /**
+     * Overriden run class required for a Class implementing runnable, waits for request,
+     * reads the first line and passes data to required methods. Also closes connection and
+     * input/output readers when completed.
+     */
     @Override
     public void run() {
         try {
@@ -46,13 +60,13 @@ public class ConnectionHandler implements Runnable {
                 String requestType = tokenizer.nextToken();
                 String requestDirectory = directory + tokenizer.nextToken();
 
+                // Print out the first line of the request as tokens to ensure correct data retrieved
                 System.out.println(ThreadColor.ANSI_GREEN + "--------- REQUEST -------");
                 System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + requestType);
                 System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + requestDirectory);
                 System.out.println(ThreadColor.ANSI_GREEN + "String 2 = " + tokenizer.nextToken());
-                //System.out.println(ThreadColor.ANSI_BLUE + headRequest.toString());
-//                System.out.println(ThreadColor.ANSI_CYAN + "DATA = " + data);
 
+                // Logs the request recieved to the main server log
                 WebServerMain.printToLog("Received " + requestType + " request on file " + requestDirectory);
 
                 handleRequest(requestDirectory, requestType);
@@ -73,6 +87,13 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+    /**
+     * Processes the request of the client, calling the relevant retrieval methods if needed
+     * or sending back 404 and 501 responses if not valid.
+     *
+     * @param requestedFile file path of the file declared by the client
+     * @param request       HTTP request, ie GET, HEAD, PUT
+     */
     private void handleRequest(String requestedFile, String request) {
         String contentType = "";
 
@@ -121,6 +142,12 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+    /**
+     * Given a directory as a string, converts it to a file object if the file exists
+     *
+     * @param requestDirectory string of file path
+     * @return null if file does not exist or File object
+     */
     private File getFile(String requestDirectory) {
         if (new File(requestDirectory).isFile()) {
             return new File(requestDirectory);
@@ -129,11 +156,23 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+    /**
+     * Gets the length of a file
+     *
+     * @param requestedFile File object of the file
+     * @return int Length of the file
+     */
     private int getFileLength(File requestedFile) {
         long fileLength = requestedFile.length();
         return (int) fileLength;
     }
 
+    /**
+     * Given a file, retrieves the extension of the file and returns the HTTP content type
+     *
+     * @param file File object of file to check
+     * @return String of content type
+     */
     private String checkContentType(File file) {
         String fileName = file.getName();
 
@@ -150,18 +189,31 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
-    private String getFileTypeFromContentType(String contentType){
-        if(contentType.endsWith("text/html")){
+    /**
+     * Given a content type from a client request, returns the extension of the file
+     *
+     * @param contentType String content-type header from request
+     * @return UNKNOWN if not implemented otherwise file extension
+     */
+    private String getFileTypeFromContentType(String contentType) {
+        if (contentType.endsWith("text/html")) {
             return ".html";
-        }  else if(contentType.endsWith("image/png")){
+        } else if (contentType.endsWith("image/png")) {
             return ".png";
-        } else if(contentType.endsWith("text/plain")){
+        } else if (contentType.endsWith("text/plain")) {
             return ".txt";
         } else {
             return "UNKNOWN";
         }
     }
 
+    /**
+     * Sends the requested file data as either text for html and text files or as bytes for
+     * images to the client via the socket PrintWriter output or a buffered output for byte data.
+     *
+     * @param file        File object to retrieve the data from
+     * @param contentType Type of file
+     */
     private void sendData(File file, String contentType) {
 
         try {
@@ -192,6 +244,14 @@ public class ConnectionHandler implements Runnable {
 
     }
 
+    /**
+     * Sends the HEAD request to the client. Configuration options have been included for
+     * processing OPTIONS requests
+     * @param file File object to return the HEAD data for
+     * @param contentType Content type of file
+     * @param config integer used to control OPTIONS requests, 0 = normal HEAD or GET, 1 = OPTIONS,
+     *               2 = SERVER OPTIONS
+     */
     private void sendHEAD(File file, String contentType, int config) {
         output.println("HTTP/1.1 200 OK");
         WebServerMain.printToLog("Response from server - 200 OK");
@@ -214,7 +274,11 @@ public class ConnectionHandler implements Runnable {
         WebServerMain.printToLog("Header sent from server");
     }
 
-
+    /**
+     * Processes the GET HTTP request sending the head, data and then logging
+     * @param file File to be sent to the client
+     * @param contentType Content type of the file
+     */
     private void sendGET(File file, String contentType) {
         // return the header
         sendHEAD(file, contentType, 0);
@@ -223,6 +287,12 @@ public class ConnectionHandler implements Runnable {
         WebServerMain.printToLog(contentType + " of length " + getFileLength(file) + " sent from server");
     }
 
+    /**
+     * Processes the PUT HTTP request by reading the head and then data of the request before
+     * performing neccassary checks and operations of the file in question.
+     * Will send 501, 200 or 201 responses to the client.
+     * @param requestedFile String of the requested file to alter
+     */
     private void putRequest(String requestedFile) {
         String fileType = "";
         try {
@@ -243,7 +313,9 @@ public class ConnectionHandler implements Runnable {
             System.out.println("putRequest: Read from input error:" + e.getMessage());
         }
 
-        if(fileType.equals("UNKNOWN")){
+        // If the file type is not recognised or server does not have functionality to deal with it
+        // will return 501 response.
+        if (fileType.equals("UNKNOWN")) {
             output.println("HTTP/1.1 501 NOT IMPLEMENTED");
             WebServerMain.printToLog("Response from server - 501 NOT IMPLEMENTED");
             System.out.println(ThreadColor.ANSI_RED + "Response from server - 501 Not Implemented");
@@ -253,14 +325,14 @@ public class ConnectionHandler implements Runnable {
         // Check if the file already exists
         File targetFile = new File(requestedFile + fileType);
         boolean existsAlready = false;
-        if(targetFile.exists() && !targetFile.isDirectory()){
+        if (targetFile.exists() && !targetFile.isDirectory()) {
             existsAlready = true;
         }
 
-        try(
+        try (
                 BufferedWriter bw = new BufferedWriter(new FileWriter(targetFile));
                 PrintWriter pw = new PrintWriter(bw)
-        ){
+        ) {
             // Write the data to the file, PUT request always overwrites so OK to do so
             System.out.println(ThreadColor.ANSI_CYAN + "--------- DATA -------");
             StringBuffer s = new StringBuffer("");
@@ -272,7 +344,7 @@ public class ConnectionHandler implements Runnable {
             }
 
             // If the file existed, return 204 message else 201 to acknowledge creation
-            if(!existsAlready){
+            if (!existsAlready) {
                 output.println("HTTP/1.1 201 Created");
                 WebServerMain.printToLog("Response from server - 201 Created");
                 System.out.println(ThreadColor.ANSI_RED + "Response from server - 201 Created");
