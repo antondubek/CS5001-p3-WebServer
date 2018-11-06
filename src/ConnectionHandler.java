@@ -269,7 +269,7 @@ public class ConnectionHandler implements Runnable {
         output.println("Server: Java HTTP Server by ACM35");
         output.println("Date: " + new Date());
         if (config != 0) {
-            output.println("Allow: OPTIONS, GET, HEAD");
+            output.println("Allow: OPTIONS, GET, HEAD, PUT");
         }
         if (config != 2) {
             output.println("Content-Type: " + contentType);
