@@ -24,7 +24,7 @@ public class WebServerMain {
             createLogFile(logFilePath);
 
             // Check the arguments passed are valid
-            if(checkDirectory(directory) && checkPort(port)){
+            if (checkDirectory(directory) && checkPort(port)) {
                 Server server = new Server(directory, port, 10);
                 new Thread(server).start();
             }
@@ -37,14 +37,15 @@ public class WebServerMain {
 
     /**
      * Checks whether the directory exists
+     *
      * @param directory String containing location of directory
      * @return Boolean True if exists, false if not
      */
-    private static boolean checkDirectory(String directory){
+    private static boolean checkDirectory(String directory) {
         File file = new File(directory);
-        if(file.isDirectory()){
+        if (file.isDirectory()) {
             return true;
-        } else{
+        } else {
             System.out.println("ERROR STARTING SERVER: Please ensure that the directory exists");
             return false;
         }
@@ -52,11 +53,12 @@ public class WebServerMain {
 
     /**
      * Checks the port number passed is valid (ie within the registered port range 1024 - 49151)
+     *
      * @param port int number to listen on
      * @return boolean true if in range, false if not
      */
-    private static boolean checkPort(int port){
-        if(port <= 49151 && port > 1024){
+    private static boolean checkPort(int port) {
+        if (port <= 49151 && port > 1024) {
             return true;
         } else {
             System.out.println("ERROR STARTING SERVER: Please use a port number from 1024 - 49151");
@@ -66,6 +68,7 @@ public class WebServerMain {
 
     /**
      * Checks whether a log file exists, if it does, loads it, else creates one
+     *
      * @param filePath name of the log file
      */
     private static void createLogFile(String filePath) {
@@ -86,9 +89,10 @@ public class WebServerMain {
 
     /**
      * Simple method to log a message to the log file
+     *
      * @param message message to put into the log file.
      */
-    public static void printToLog(String message){
+    public static void printToLog(String message) {
         try {
             FileWriter logFileWriter = new FileWriter(logFilePath, true);
             DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");

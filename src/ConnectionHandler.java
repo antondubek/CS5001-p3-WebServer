@@ -247,10 +247,11 @@ public class ConnectionHandler implements Runnable {
     /**
      * Sends the HEAD request to the client. Configuration options have been included for
      * processing OPTIONS requests
-     * @param file File object to return the HEAD data for
+     *
+     * @param file        File object to return the HEAD data for
      * @param contentType Content type of file
-     * @param config integer used to control OPTIONS requests, 0 = normal HEAD or GET, 1 = OPTIONS,
-     *               2 = SERVER OPTIONS
+     * @param config      integer used to control OPTIONS requests, 0 = normal HEAD or GET, 1 = OPTIONS,
+     *                    2 = SERVER OPTIONS
      */
     private void sendHEAD(File file, String contentType, int config) {
         output.println("HTTP/1.1 200 OK");
@@ -276,7 +277,8 @@ public class ConnectionHandler implements Runnable {
 
     /**
      * Processes the GET HTTP request sending the head, data and then logging
-     * @param file File to be sent to the client
+     *
+     * @param file        File to be sent to the client
      * @param contentType Content type of the file
      */
     private void sendGET(File file, String contentType) {
@@ -291,6 +293,7 @@ public class ConnectionHandler implements Runnable {
      * Processes the PUT HTTP request by reading the head and then data of the request before
      * performing neccassary checks and operations of the file in question.
      * Will send 501, 200 or 201 responses to the client.
+     *
      * @param requestedFile String of the requested file to alter
      */
     private void putRequest(String requestedFile) {

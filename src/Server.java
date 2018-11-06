@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
  * It then creates and manages a threadpool which handles each connection to the server
  * This allows for multiple simultaneous connections
  */
-public class Server implements Runnable{
+public class Server implements Runnable {
 
     private String directory;
     private int port;
@@ -17,9 +17,10 @@ public class Server implements Runnable{
 
     /**
      * Server constructor
+     *
      * @param directory directory of the server
-     * @param port port to listen on for incoming connections
-     * @param poolSize size of threadPool, number of simultaneous connections allowed
+     * @param port      port to listen on for incoming connections
+     * @param poolSize  size of threadPool, number of simultaneous connections allowed
      */
     public Server(String directory, int port, int poolSize) {
         this.directory = directory;
