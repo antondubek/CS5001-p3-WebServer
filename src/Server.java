@@ -20,6 +20,7 @@ public class Server implements Runnable{
     @Override
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
+            serverSocket.setSoTimeout(30*1000);
 
             while (true) {
                 System.out.println(ThreadColor.ANSI_BLUE + "Server Listening on Port " + port);

@@ -13,8 +13,9 @@ public class ConnectionHandler implements Runnable {
     private PrintWriter output;
     private BufferedOutputStream buffOut;
     private StringTokenizer tokenizer;
+    private StringBuilder headRequest;
 
-    private BufferedInputStream putBuff;
+    private String data;
 
     public ConnectionHandler(Socket socket, String directory) {
         System.out.println(ThreadColor.ANSI_BLUE + "Connection Established, creating handler");
@@ -40,22 +41,8 @@ public class ConnectionHandler implements Runnable {
 
                 // Receive the input being sent
                 String request = input.readLine();
-                //System.out.println(input.readLine());
 
-//                StringBuilder sb = new StringBuilder();
-//
-//                String line = null;
-//                while (( line = input.readLine()) != null) {
-//                    sb.append(line + "\n");
-//                }
-//
-//                System.out.println("here");
-//                input.close();
-//                output.println("HTTP/1.1 201 Created");
-//                output.println("Content-Location: ");
-//
-//                System.out.println(sb.toString());
-
+                // Create a tokenizer for the first line of the request and save needed variables
                 tokenizer = new StringTokenizer(request);
                 String requestType = tokenizer.nextToken();
                 String requestDirectory = directory + tokenizer.nextToken();
@@ -63,12 +50,12 @@ public class ConnectionHandler implements Runnable {
                 System.out.println(ThreadColor.ANSI_GREEN + "String 0 = " + requestType);
                 System.out.println(ThreadColor.ANSI_GREEN + "String 1 = " + requestDirectory);
                 System.out.println(ThreadColor.ANSI_GREEN + "String 2 = " + tokenizer.nextToken());
-                //System.out.println(ThreadColor.ANSI_GREEN + "String 3 = " + tokenizer.nextToken());
+                //System.out.println(ThreadColor.ANSI_BLUE + headRequest.toString());
+//                System.out.println(ThreadColor.ANSI_CYAN + "DATA = " + data);
 
                 WebServerMain.printToLog("Received " + requestType + " request on file " + requestDirectory);
 
                 handleRequest(requestDirectory, requestType);
-
                 break;
             }
         } catch (IOException e) {
@@ -79,6 +66,7 @@ public class ConnectionHandler implements Runnable {
                 output.close();
                 buffOut.close();
                 socket.close();
+                System.out.println(ThreadColor.ANSI_RED + "Connection Closed");
             } catch (IOException e) {
                 System.out.println("ClientHandler run Finally: " + e.getMessage());
             }
@@ -123,10 +111,12 @@ public class ConnectionHandler implements Runnable {
             case "404":
                 output.println("HTTP/1.1 404 Not Found");
                 WebServerMain.printToLog("Response from server - 404 Not Found");
+                System.out.println(ThreadColor.ANSI_RED + "Response from server - 404 Not Found");
                 break;
             default:
                 output.println("HTTP/1.1 501 Not Implemented");
                 WebServerMain.printToLog("Response from server - 501 Not Implemented");
+                System.out.println(ThreadColor.ANSI_RED + "501 Not Implemented");
                 break;
         }
     }
@@ -157,6 +147,18 @@ public class ConnectionHandler implements Runnable {
             return "image/gif";
         } else {
             return "text/plain";
+        }
+    }
+
+    private String getFileTypeFromContentType(String contentType){
+        if(contentType.endsWith("text/html")){
+            return ".html";
+        }  else if(contentType.endsWith("image/png")){
+            return ".png";
+        } else if(contentType.endsWith("text/plain")){
+            return ".txt";
+        } else {
+            return "UNKNOWN";
         }
     }
 
@@ -193,6 +195,7 @@ public class ConnectionHandler implements Runnable {
     private void sendHEAD(File file, String contentType, int config) {
         output.println("HTTP/1.1 200 OK");
         WebServerMain.printToLog("Response from server - 200 OK");
+        System.out.println(ThreadColor.ANSI_RED + "Response from server - 200 OK");
         output.println("Server: Java HTTP Server by ACM35");
         output.println("Date: " + new Date());
         if (config != 0) {
@@ -221,70 +224,70 @@ public class ConnectionHandler implements Runnable {
     }
 
     private void putRequest(String requestedFile) {
+        String fileType = "";
         try {
+            // Create a string builder to save the whole head of request
+            headRequest = new StringBuilder();
+            String line = null;
+            System.out.println(ThreadColor.ANSI_PURPLE + "--------- HEAD -------");
+            // Iterate through until there is a blank line signifying start of data
+            while (!(line = input.readLine()).equals("")) {
+                headRequest.append(line + "\n");
+                //If the line is the content-type, check what kind of file it is
+                if (line.toLowerCase().startsWith("content-type")) {
+                    fileType = getFileTypeFromContentType(line);
+                }
+                System.out.println(ThreadColor.ANSI_PURPLE + line);
+            }
+        } catch (IOException e) {
+            System.out.println("putRequest: Read from input error:" + e.getMessage());
+        }
 
-            BufferedWriter bw = new BufferedWriter(new FileWriter("helloworld.txt"));
-            PrintWriter pw = new PrintWriter(bw);
+        if(fileType.equals("UNKNOWN")){
+            output.println("HTTP/1.1 501 NOT IMPLEMENTED");
+            WebServerMain.printToLog("Response from server - 501 NOT IMPLEMENTED");
+            System.out.println(ThreadColor.ANSI_RED + "Response from server - 501 Not Implemented");
+            return;
+        }
 
+        // Check if the file already exists
+        File targetFile = new File(requestedFile + fileType);
+        boolean existsAlready = false;
+        if(targetFile.exists() && !targetFile.isDirectory()){
+            existsAlready = true;
+        }
+
+        try(
+                BufferedWriter bw = new BufferedWriter(new FileWriter(targetFile));
+                PrintWriter pw = new PrintWriter(bw)
+        ){
+            // Write the data to the file, PUT request always overwrites so OK to do so
+            System.out.println(ThreadColor.ANSI_CYAN + "--------- DATA -------");
             StringBuffer s = new StringBuffer("");
             String line = "";
-            for(int i = 0; i<20; i++){
-                s.append(input.readLine());
+            while (!(line = input.readLine()).equals("")) {
+                s.append(line + "\n");
+                pw.println(line);
+                System.out.println(line);
             }
 
-            System.out.println(s.toString());
+            // If the file existed, return 201 message else 204 to acknowledge competition
+            if(existsAlready){
+                output.println("HTTP/1.1 201 Created");
+                WebServerMain.printToLog("Response from server - 201 Created");
+                System.out.println(ThreadColor.ANSI_RED + "Response from server - 201 Created");
+            } else {
+                output.println("HTTP/1.1 200 OK");
+                WebServerMain.printToLog("Response from server - 200 OK");
+                System.out.println(ThreadColor.ANSI_RED + "Response from server - 200 OK");
+            }
 
-//            String line;
-//            while ((line = input.readLine()) != null) {
-//                pw.println(line);
-//            }
-            //String line = "";
-            String message = "";
-            int helper = 0;
-//            while (true) {
-//                line = input.readLine();
-//                System.out.println("/" + line + "/");
-//                System.out.println(line.length());
-//                System.out.println("Helper = " + helper);
-////                if (helper == 1) {
-////                    message = line;
-////                    System.out.println("Message " + line);
-////                    break;
-////                }
-////                if (line.length() == 0) {
-////                    helper++;
-////                }
-//
-//                pw.println(line);
-//            }
+            output.println("Content-Location: " + targetFile.getPath());
 
-            System.out.println("PLease be this" + message);
 
-            System.out.println("HERE");
-            output.println("HTTP/1.1 201 Created");
-            output.println("Content-Location: /helloworld.txt");
-
-            bw.close();
-            pw.close();
-
-        } catch (
-                IOException e)
-
-        {
-            System.out.println("Error" + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("putRequest: Read from data / write to file error:" + e.getMessage());
         }
-        //first check if it exists
-
-        //if it does exist
-        // overwrite it
-        // return 200 OK
-
-        // else create it with the content
-        // return 201 Created
-
-        //if for some reason this doesnt work, send an error code
-        // eg 501 not implemented or something more helpful
-
     }
 
 }
