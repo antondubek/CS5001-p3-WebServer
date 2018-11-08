@@ -1,16 +1,6 @@
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.Date;
-import java.util.Scanner;
 import java.util.StringTokenizer;
 
 /**
@@ -22,7 +12,7 @@ public class ConnectionHandler implements Runnable {
     private String directory;
     private BufferedReader input;
     private PrintWriter output;
-    private BufferedOutputStream buffOut;
+    private PrintStream streamOut;
     private StringTokenizer tokenizer;
     private StringBuilder headRequest;
     private String data;
@@ -44,7 +34,7 @@ public class ConnectionHandler implements Runnable {
         try {
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = new PrintWriter(socket.getOutputStream(), true);
-            buffOut = new BufferedOutputStream(socket.getOutputStream());
+            streamOut = new PrintStream(socket.getOutputStream());
 
         } catch (IOException e) {
             System.out.println("Connection Handler Constructor: " + e.getMessage());
@@ -87,7 +77,7 @@ public class ConnectionHandler implements Runnable {
             try {
                 input.close();
                 output.close();
-                buffOut.close();
+                streamOut.close();
                 socket.close();
                 System.out.println(ThreadColor.ANSI_RED + "Connection Closed");
             } catch (IOException e) {
@@ -217,8 +207,8 @@ public class ConnectionHandler implements Runnable {
     }
 
     /**
-     * Sends the requested file data as either text for html and text files or as bytes for
-     * images to the client via the socket PrintWriter output or a buffered output for byte data.
+     * Sends the requested file data as bytes.
+     * Works for images and text files.
      *
      * @param file        File object to retrieve the data from
      * @param contentType Type of file
@@ -226,26 +216,10 @@ public class ConnectionHandler implements Runnable {
     private void sendData(File file, String contentType) {
 
         try {
-            if (contentType.equals("text/html") || contentType.equals("text/plain")) {
-                Scanner scanner = new Scanner(new File(file.getPath()));
-                String text = scanner.useDelimiter("\\A").next();
-                output.print(text);
-                scanner.close();
-
-            } else {
-
-                byte[] buffer = new byte[getFileLength(file)];
-                BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-
-                int bytesRead;
-                while ((bytesRead = in.read(buffer)) != -1) {
-                    buffOut.write(buffer, 0, bytesRead);
-                }
-
-                in.close();
-            }
-
-            output.flush();
+            FileInputStream inputStream = new FileInputStream(file.getPath());
+            byte[] fileBytes = new byte[getFileLength(file)];
+            inputStream.read(fileBytes);
+            streamOut.write(fileBytes, 0, getFileLength(file));
 
         } catch (IOException e) {
             System.out.println("ClientHandler sendData: " + e.getMessage());
